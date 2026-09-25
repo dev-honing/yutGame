@@ -1456,6 +1456,157 @@ a {
   72% { transform: translateX(-6px); }
 }
 
+.throw-motion-effect.settled {
+  animation: throw-overlay-three 4.4s ease-out both;
+}
+
+.throw-motion-effect.nak::before {
+  animation: nak-screen-three 1.45s 2.15s ease-out both;
+}
+
+.throw-three-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.throw-motion-stage {
+  z-index: 2;
+  width: min(720px, 100vw);
+  height: min(680px, 100vh);
+  perspective: none;
+}
+
+.throw-motion-stage::after {
+  display: none;
+}
+
+.throw-motion-effect.nak .throw-motion-stage {
+  animation: nak-stage-three 0.52s 2.24s ease-out both;
+}
+
+.throw-motion-zone {
+  top: 5%;
+  box-shadow: 0 8px 22px rgba(31, 37, 35, 0.24);
+  animation: throw-zone-arrive 0.5s ease-out both;
+}
+
+.throw-motion-burst,
+.throw-motion-impact {
+  position: absolute;
+  left: 50%;
+  top: 59%;
+  z-index: 3;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.throw-motion-burst i {
+  --ray-angle: 0deg;
+  position: absolute;
+  left: -1px;
+  bottom: 0;
+  width: 3px;
+  height: 112px;
+  border-radius: 2px;
+  background: rgba(187, 141, 49, 0.82);
+  opacity: 0;
+  transform-origin: 50% 100%;
+  animation: throw-burst-ray 0.78s 1.53s ease-out both;
+}
+
+.throw-motion-effect.outside .throw-motion-burst i {
+  background: rgba(184, 91, 56, 0.84);
+}
+
+.throw-motion-burst i:nth-child(1) { --ray-angle: 0deg; }
+.throw-motion-burst i:nth-child(2) { --ray-angle: 30deg; }
+.throw-motion-burst i:nth-child(3) { --ray-angle: 60deg; }
+.throw-motion-burst i:nth-child(4) { --ray-angle: 90deg; }
+.throw-motion-burst i:nth-child(5) { --ray-angle: 120deg; }
+.throw-motion-burst i:nth-child(6) { --ray-angle: 150deg; }
+.throw-motion-burst i:nth-child(7) { --ray-angle: 180deg; }
+.throw-motion-burst i:nth-child(8) { --ray-angle: 210deg; }
+.throw-motion-burst i:nth-child(9) { --ray-angle: 240deg; }
+.throw-motion-burst i:nth-child(10) { --ray-angle: 270deg; }
+.throw-motion-burst i:nth-child(11) { --ray-angle: 300deg; }
+.throw-motion-burst i:nth-child(12) { --ray-angle: 330deg; }
+
+.throw-motion-impact {
+  width: 80px;
+  height: 80px;
+  border: 4px solid rgba(255, 253, 247, 0.82);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: throw-impact-ring 0.9s 1.48s ease-out both;
+}
+
+.throw-motion-effect.outside .throw-motion-impact {
+  border-color: rgba(222, 113, 75, 0.86);
+}
+
+.throw-motion-result {
+  top: 28%;
+  animation: throw-result-three 0.9s 2.28s cubic-bezier(0.16, 0.86, 0.28, 1.18) both;
+}
+
+.throw-motion-result strong {
+  font-size: 78px;
+  text-shadow: 0 4px 0 #fffdf7, 0 14px 30px rgba(31, 37, 35, 0.35);
+}
+
+@keyframes throw-zone-arrive {
+  0% { opacity: 0; transform: translate(-50%, -12px) scale(0.92); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes throw-burst-ray {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle)) translateY(10px) scaleY(0.08);
+  }
+  24% { opacity: 0.9; }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--ray-angle)) translateY(-90px) scaleY(0.42);
+  }
+}
+
+@keyframes throw-impact-ring {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(5.4); }
+}
+
+@keyframes throw-result-three {
+  0% { opacity: 0; transform: translate(-50%, -38%) scale(0.38) rotate(-7deg); filter: blur(6px); }
+  58% { opacity: 1; transform: translate(-50%, -52%) scale(1.18) rotate(2deg); filter: blur(0); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); filter: blur(0); }
+}
+
+@keyframes throw-overlay-three {
+  0%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes nak-screen-three {
+  0% { border-width: 0; background: rgba(182, 61, 79, 0); }
+  18% { border-width: 14px; background: rgba(182, 61, 79, 0.24); }
+  100% { border-width: 0; background: rgba(182, 61, 79, 0); }
+}
+
+@keyframes nak-stage-three {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-18px) rotate(-1.2deg); }
+  38% { transform: translateX(15px) rotate(1deg); }
+  58% { transform: translateX(-10px) rotate(-0.6deg); }
+  78% { transform: translateX(6px); }
+}
+
 .empty-throws {
   min-height: 54px;
   display: grid;
@@ -1788,6 +1939,9 @@ a {
   .throw-motion-effect,
   .throw-motion-effect::before,
   .throw-motion-stage,
+  .throw-motion-zone,
+  .throw-motion-burst i,
+  .throw-motion-impact,
   .flying-yut i,
   .throw-motion-result {
     animation: none !important;

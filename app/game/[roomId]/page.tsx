@@ -14,6 +14,7 @@ import type {
   YutPiece,
 } from "@/lib/types";
 import { THROW_ODDS } from "@/lib/throw-rules";
+import { ThrowThreeScene } from "./throw-three-scene";
 import {
   BOARD_CONNECTIONS,
   BOARD_POSITIONS,
@@ -140,9 +141,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
 
     const motionTimer = setTimeout(() => {
       setThrowMotion((current) => current?.record?.id === record.id ? null : current);
-    }, 1750);
+    }, 4400);
     const bonusTimer = record.extraTurn
-      ? setTimeout(() => setBonusEffect({ record, side: throwingSide }), 900)
+      ? setTimeout(() => setBonusEffect({ record, side: throwingSide }), 4100)
       : undefined;
 
     return () => {
@@ -593,7 +594,6 @@ function BonusThrowEffect({ record, side }: { record: ThrowRecord; side: PlayerS
 
 function ThrowMotionEffect({ motion }: { motion: ThrowMotion }) {
   const record = motion.record;
-  const faces = record?.sticks || (["front", "back", "front", "back"] as const);
   const resultDetail = record
     ? record.name === "nak"
       ? "이번 던지기 무효"
@@ -608,15 +608,10 @@ function ThrowMotionEffect({ motion }: { motion: ThrowMotion }) {
       role="status"
       aria-live="assertive"
     >
+      <ThrowThreeScene motionId={motion.key} zone={motion.zone} record={record} />
       <div className="throw-motion-stage">
         <span className="throw-motion-zone">
           {sideLabel(motion.side)} · {motion.zone === "outside" ? "판 밖 승부" : "판 안 투척"}
-        </span>
-        <span className="throw-motion-mat" aria-hidden="true" />
-        <span className="flying-yut" aria-hidden="true">
-          {faces.map((face, index) => (
-            <i key={index} className={`${face} stick-${index + 1}`} />
-          ))}
         </span>
         {record && (
           <span className="throw-motion-result">
