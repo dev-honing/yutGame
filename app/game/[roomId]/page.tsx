@@ -141,9 +141,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
 
     const motionTimer = setTimeout(() => {
       setThrowMotion((current) => current?.record?.id === record.id ? null : current);
-    }, 4400);
+    }, 6500);
     const bonusTimer = record.extraTurn
-      ? setTimeout(() => setBonusEffect({ record, side: throwingSide }), 4100)
+      ? setTimeout(() => setBonusEffect({ record, side: throwingSide }), 6100)
       : undefined;
 
     return () => {

@@ -1458,7 +1458,7 @@ a {
 }
 
 .throw-motion-effect.settled {
-  animation: throw-overlay-three 4.4s ease-out both;
+  animation: throw-overlay-three 6.5s ease-out both;
 }
 
 .throw-motion-effect.nak::before {
@@ -1590,7 +1590,7 @@ a {
 }
 
 @keyframes throw-overlay-three {
-  0%, 88% { opacity: 1; }
+  0%, 92% { opacity: 1; }
   100% { opacity: 0; }
 }
 
