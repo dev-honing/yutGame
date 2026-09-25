@@ -9,9 +9,11 @@ import type {
   PlayerSide,
   ServerError,
   ThrowRecord,
+  ThrowZone,
   UserIdentity,
   YutPiece,
 } from "@/lib/types";
+import { THROW_ODDS } from "@/lib/throw-rules";
 import {
   BOARD_CONNECTIONS,
   BOARD_POSITIONS,
@@ -22,6 +24,17 @@ import {
 } from "@/lib/yut-rules";
 
 type ActionName = "throw" | "move" | "pass" | "resign" | "rematch";
+
+interface ThrowMotion {
+  key: string;
+  zone: ThrowZone;
+  record: ThrowRecord | null;
+  side: PlayerSide;
+}
+
+function oddsLabel(value: number) {
+  return `${value * 100}%`;
+}
 
 function resultTitle(state: GameState, side: PlayerSide | null) {
   if (!state.result) return "";
@@ -46,6 +59,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [lanOrigin, setLanOrigin] = useState("");
+  const [throwZone, setThrowZone] = useState<ThrowZone>("inside");
+  const [isThrowing, setIsThrowing] = useState(false);
+  const [throwMotion, setThrowMotion] = useState<ThrowMotion | null>(null);
   const [bonusEffect, setBonusEffect] = useState<{
     record: ThrowRecord;
     side: PlayerSide;
@@ -68,6 +84,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
         if (!response.ok) throw new Error((data as ServerError).message);
         if (disposed) return;
         const joined = data as JoinRoomResponse;
+        seenThrowIdRef.current = joined.state.lastThrow?.id || null;
         setSide(joined.playerSide);
         setState(joined.state);
         setNotice("");
@@ -113,10 +130,26 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
     if (seenThrowIdRef.current === record.id) return;
 
     seenThrowIdRef.current = record.id;
-    if (record.extraTurn && state) {
-      setBonusEffect({ record, side: state.turn });
-    }
-  }, [state?.lastThrow, state]);
+    const throwingSide = record.side || state?.turn || "blue";
+    setThrowMotion((current) => ({
+      key: current && !current.record && current.side === throwingSide ? current.key : record.id,
+      zone: record.zone || "inside",
+      record,
+      side: throwingSide,
+    }));
+
+    const motionTimer = setTimeout(() => {
+      setThrowMotion((current) => current?.record?.id === record.id ? null : current);
+    }, 1750);
+    const bonusTimer = record.extraTurn
+      ? setTimeout(() => setBonusEffect({ record, side: throwingSide }), 900)
+      : undefined;
+
+    return () => {
+      clearTimeout(motionTimer);
+      if (bonusTimer) clearTimeout(bonusTimer);
+    };
+  }, [state?.lastThrow?.id]);
 
   useEffect(() => {
     if (!bonusEffect) return;
@@ -147,6 +180,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const passThrow = state?.pendingThrows[0] || null;
   const canPass = Boolean(canMove && passThrow && legalMoves.length === 0);
   const hasBonusThrow = Boolean(canThrow && state?.lastThrow?.extraTurn);
+  const throwLocked = isThrowing || Boolean(throwMotion);
 
   const requestAction = useCallback(
     async (action: ActionName, payload: Record<string, unknown> = {}) => {
@@ -159,14 +193,32 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
         });
         const data = (await response.json()) as GameState | ServerError;
         if (!response.ok) throw new Error((data as ServerError).message);
-        setState(data as GameState);
+        const nextState = data as GameState;
+        setState(nextState);
         setNotice("");
+        return nextState;
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "요청을 처리하지 못했습니다.");
+        return null;
       }
     },
     [roomId],
   );
+
+  async function handleThrow() {
+    if (!canThrow || !side || throwLocked) return;
+
+    setIsThrowing(true);
+    setThrowMotion({
+      key: `pending-${Date.now()}`,
+      zone: throwZone,
+      record: null,
+      side,
+    });
+    const nextState = await requestAction("throw", { throwZone });
+    if (!nextState) setThrowMotion(null);
+    setIsThrowing(false);
+  }
 
   function selectPiece(pieceId: number) {
     if (!canMove) return;
@@ -247,6 +299,8 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
           side={bonusEffect.side}
         />
       )}
+
+      {throwMotion && <ThrowMotionEffect key={throwMotion.key} motion={throwMotion} />}
 
       <div className="game-layout">
         <section className="board-column">
@@ -381,9 +435,45 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
             </div>
           </div>
 
-          <button className="throw-button" onClick={() => void requestAction("throw")} disabled={!canThrow}>
-            <span>{hasBonusThrow ? "한 번 더 던지기" : "윷 던지기"}</span>
-            <b>{hasBonusThrow ? "BONUS" : canThrow ? "READY" : state.phase === "move" ? "MOVE" : "WAIT"}</b>
+          <div className="throw-zone-picker" role="radiogroup" aria-label="윷 던질 위치">
+            <button
+              type="button"
+              className={throwZone === "inside" ? "selected" : ""}
+              role="radio"
+              aria-checked={throwZone === "inside"}
+              disabled={!canThrow || throwLocked}
+              onClick={() => setThrowZone("inside")}
+            >
+              <b>판 안</b>
+              <small>낙 없음 · 윷·모 각 {oddsLabel(THROW_ODDS.inside.yut)}</small>
+            </button>
+            <button
+              type="button"
+              className={`outside ${throwZone === "outside" ? "selected" : ""}`}
+              role="radio"
+              aria-checked={throwZone === "outside"}
+              disabled={!canThrow || throwLocked}
+              onClick={() => setThrowZone("outside")}
+            >
+              <b>판 밖</b>
+              <small>윷·모 각 {oddsLabel(THROW_ODDS.outside.yut)} · 낙 {oddsLabel(THROW_ODDS.outside.nak)}</small>
+            </button>
+          </div>
+
+          <button
+            className="throw-button"
+            onClick={() => void handleThrow()}
+            disabled={!canThrow || throwLocked}
+            aria-busy={throwLocked}
+          >
+            <span>
+              {throwLocked
+                ? isThrowing ? "윷이 날아가는 중" : "결과 확인 중"
+                : hasBonusThrow
+                  ? `한 번 더 · ${throwZone === "outside" ? "판 밖" : "판 안"}`
+                  : `${throwZone === "outside" ? "판 밖으로" : "판 안으로"} 던지기`}
+            </span>
+            <b>{throwLocked ? "THROW" : hasBonusThrow ? "BONUS" : canThrow ? "READY" : state.phase === "move" ? "MOVE" : "WAIT"}</b>
           </button>
 
           <div className="throw-list">
@@ -497,6 +587,44 @@ function BonusThrowEffect({ record, side }: { record: ThrowRecord; side: PlayerS
         <strong>{record.label}!</strong>
         <b>한 번 더</b>
       </span>
+    </div>
+  );
+}
+
+function ThrowMotionEffect({ motion }: { motion: ThrowMotion }) {
+  const record = motion.record;
+  const faces = record?.sticks || (["front", "back", "front", "back"] as const);
+  const resultDetail = record
+    ? record.name === "nak"
+      ? "이번 던지기 무효"
+      : record.extraTurn
+        ? "한 번 더"
+        : formatThrowSteps(record.steps)
+    : "";
+
+  return (
+    <div
+      className={`throw-motion-effect ${motion.zone} ${record ? "settled" : "in-flight"} ${record?.name === "nak" ? "nak" : ""}`}
+      role="status"
+      aria-live="assertive"
+    >
+      <div className="throw-motion-stage">
+        <span className="throw-motion-zone">
+          {sideLabel(motion.side)} · {motion.zone === "outside" ? "판 밖 승부" : "판 안 투척"}
+        </span>
+        <span className="throw-motion-mat" aria-hidden="true" />
+        <span className="flying-yut" aria-hidden="true">
+          {faces.map((face, index) => (
+            <i key={index} className={`${face} stick-${index + 1}`} />
+          ))}
+        </span>
+        {record && (
+          <span className="throw-motion-result">
+            <strong>{record.label}!</strong>
+            <b>{resultDetail}</b>
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -1043,12 +1043,64 @@ a {
   font-size: 12px;
 }
 
+.throw-zone-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin: 12px 12px 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #eee7da;
+}
+
+.throw-zone-picker button {
+  min-width: 0;
+  min-height: 58px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.throw-zone-picker button + button {
+  border-left: 1px solid var(--line);
+}
+
+.throw-zone-picker button.selected {
+  background: #fffdf7;
+  box-shadow: inset 0 -3px 0 var(--green);
+}
+
+.throw-zone-picker button.outside.selected {
+  background: #fff6e3;
+  box-shadow: inset 0 -3px 0 #b85b38;
+}
+
+.throw-zone-picker button:disabled {
+  opacity: 0.48;
+}
+
+.throw-zone-picker b {
+  font-size: 13px;
+}
+
+.throw-zone-picker small {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .throw-button {
   min-height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 12px;
+  margin: 8px 12px 12px;
   padding: 0 16px;
   background: var(--ink);
   color: white;
@@ -1117,6 +1169,291 @@ a {
 .throw-sticks i {
   height: 38px;
   width: 10px;
+}
+
+.throw-motion-effect {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgba(31, 37, 35, 0.12);
+  pointer-events: none;
+}
+
+.throw-motion-effect.settled {
+  animation: throw-overlay-settle 1.75s ease-out both;
+}
+
+.throw-motion-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 0 solid rgba(182, 61, 79, 0);
+  pointer-events: none;
+}
+
+.throw-motion-effect.nak::before {
+  animation: nak-screen-impact 1.35s 0.68s ease-out both;
+}
+
+.throw-motion-stage {
+  position: relative;
+  width: min(600px, 92vw);
+  height: min(480px, 72vh);
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+
+.throw-motion-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 69%;
+  width: min(360px, 70vw);
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(31, 37, 35, 0.2);
+  filter: blur(12px);
+  transform: translate(-50%, -50%);
+}
+
+.throw-motion-effect.nak .throw-motion-stage {
+  animation: nak-stage-shake 0.42s 0.72s ease-out both;
+}
+
+.throw-motion-zone {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  z-index: 4;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: rgba(31, 37, 35, 0.88);
+  color: white;
+  padding: 6px 9px;
+  font: 800 10px "DM Mono", monospace;
+  white-space: nowrap;
+}
+
+.throw-motion-effect.outside .throw-motion-zone {
+  background: rgba(143, 62, 40, 0.94);
+}
+
+.throw-motion-mat {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  z-index: 0;
+  width: min(340px, 66vw);
+  height: clamp(190px, 40vw, 245px);
+  border: 3px solid rgba(87, 75, 57, 0.62);
+  background: rgba(247, 240, 228, 0.92);
+  box-shadow: 0 18px 34px rgba(31, 37, 35, 0.24), inset 0 0 0 8px rgba(255, 255, 255, 0.34);
+  transform: translate(-50%, -50%) rotateX(58deg);
+}
+
+.throw-motion-effect.outside .throw-motion-mat {
+  border-color: rgba(159, 73, 47, 0.78);
+  border-style: dashed;
+}
+
+.flying-yut {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-style: preserve-3d;
+}
+
+.flying-yut i {
+  --apex-x: 0px;
+  --apex-r: 540deg;
+  --land-x: 0px;
+  --land-y: 18px;
+  --land-r: 0deg;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 27px;
+  height: 126px;
+  display: block;
+  border: 2px solid #aa7b37;
+  border-radius: 15px 15px 10px 10px;
+  background: #f2d797;
+  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.34), 0 13px 15px rgba(31, 37, 35, 0.3);
+  transform: translate3d(calc(-50% + var(--land-x)), var(--land-y), 0) rotateZ(var(--land-r));
+  transform-origin: center;
+  animation: yut-stick-flight 1.05s cubic-bezier(0.18, 0.72, 0.24, 1) both;
+}
+
+.flying-yut i::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: rgba(110, 74, 25, 0.28);
+}
+
+.flying-yut i.back,
+.flying-yut i.marked-back {
+  border-color: #111816;
+  background: #27312e;
+  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.08), 0 13px 15px rgba(31, 37, 35, 0.34);
+}
+
+.flying-yut i.back::before,
+.flying-yut i.marked-back::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.flying-yut i.marked-back::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d74354;
+  transform: translateX(-50%);
+}
+
+.flying-yut .stick-1 {
+  --apex-x: -118px;
+  --apex-r: 620deg;
+  --land-x: -105px;
+  --land-y: 9px;
+  --land-r: -68deg;
+}
+
+.flying-yut .stick-2 {
+  --apex-x: -42px;
+  --apex-r: -660deg;
+  --land-x: -34px;
+  --land-y: 42px;
+  --land-r: 28deg;
+  animation-delay: 0.04s;
+}
+
+.flying-yut .stick-3 {
+  --apex-x: 48px;
+  --apex-r: 720deg;
+  --land-x: 42px;
+  --land-y: 13px;
+  --land-r: -16deg;
+  animation-delay: 0.08s;
+}
+
+.flying-yut .stick-4 {
+  --apex-x: 126px;
+  --apex-r: -590deg;
+  --land-x: 111px;
+  --land-y: 46px;
+  --land-r: 66deg;
+  animation-delay: 0.12s;
+}
+
+.throw-motion-effect.outside .flying-yut .stick-1 {
+  --land-x: -244px;
+  --land-y: 72px;
+  --land-r: -82deg;
+}
+
+.throw-motion-effect.outside .flying-yut .stick-2 {
+  --land-x: -196px;
+  --land-y: 12px;
+  --land-r: 38deg;
+}
+
+.throw-motion-effect.outside .flying-yut .stick-3 {
+  --land-x: 196px;
+  --land-y: 30px;
+  --land-r: -30deg;
+}
+
+.throw-motion-effect.outside .flying-yut .stick-4 {
+  --land-x: 248px;
+  --land-y: 78px;
+  --land-r: 78deg;
+}
+
+.throw-motion-result {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 5;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--ink);
+  text-align: center;
+  text-shadow: 0 3px 0 #fffdf7, 0 9px 22px rgba(31, 37, 35, 0.3);
+  transform: translate(-50%, -50%);
+  animation: throw-result-impact 0.72s 0.72s cubic-bezier(0.16, 0.86, 0.28, 1.18) both;
+}
+
+.throw-motion-result strong {
+  color: var(--green);
+  font-size: 88px;
+  line-height: 0.9;
+}
+
+.throw-motion-effect.nak .throw-motion-result strong {
+  color: var(--red);
+}
+
+.throw-motion-result b {
+  font-size: 21px;
+}
+
+@keyframes yut-stick-flight {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 220px, -100px) rotateX(72deg) rotateZ(-12deg) scale(0.72);
+  }
+  10% { opacity: 1; }
+  44% {
+    opacity: 1;
+    transform: translate3d(calc(-50% + var(--apex-x)), -178px, 150px) rotateX(var(--apex-r)) rotateZ(112deg) scale(1.08);
+  }
+  76% {
+    transform: translate3d(calc(-50% + var(--land-x)), var(--land-y), 0) rotateX(850deg) rotateZ(var(--land-r)) scale(1);
+  }
+  88% {
+    transform: translate3d(calc(-50% + var(--land-x)), calc(var(--land-y) - 13px), 0) rotateX(890deg) rotateZ(var(--land-r)) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(calc(-50% + var(--land-x)), var(--land-y), 0) rotateX(900deg) rotateZ(var(--land-r)) scale(1);
+  }
+}
+
+@keyframes throw-result-impact {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45) rotate(-6deg); }
+  60% { opacity: 1; transform: translate(-50%, -50%) scale(1.16) rotate(2deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+
+@keyframes throw-overlay-settle {
+  0%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes nak-screen-impact {
+  0% { border-width: 0; background: rgba(182, 61, 79, 0); }
+  18% { border-width: 12px; background: rgba(182, 61, 79, 0.2); }
+  100% { border-width: 0; background: rgba(182, 61, 79, 0); }
+}
+
+@keyframes nak-stage-shake {
+  0%, 100% { transform: translateX(0); }
+  22% { transform: translateX(-14px) rotate(-1deg); }
+  48% { transform: translateX(12px) rotate(1deg); }
+  72% { transform: translateX(-6px); }
 }
 
 .empty-throws {
@@ -1418,6 +1755,28 @@ a {
     width: var(--board-size);
   }
 
+  .throw-motion-stage {
+    height: min(420px, 64vh);
+  }
+
+  .flying-yut i {
+    width: 21px;
+    height: 100px;
+  }
+
+  .throw-motion-effect.outside .flying-yut .stick-1 { --land-x: -190px; }
+  .throw-motion-effect.outside .flying-yut .stick-2 { --land-x: -155px; }
+  .throw-motion-effect.outside .flying-yut .stick-3 { --land-x: 155px; }
+  .throw-motion-effect.outside .flying-yut .stick-4 { --land-x: 190px; }
+
+  .throw-motion-result strong {
+    font-size: 64px;
+  }
+
+  .throw-motion-result b {
+    font-size: 17px;
+  }
+
   .history-row {
     grid-template-columns: 28px 60px 1fr;
   }
@@ -1425,8 +1784,13 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .bonus-effect,
-  .bonus-message {
-    animation: none;
+  .bonus-message,
+  .throw-motion-effect,
+  .throw-motion-effect::before,
+  .throw-motion-stage,
+  .flying-yut i,
+  .throw-motion-result {
+    animation: none !important;
   }
 
   .bonus-effect::before,
