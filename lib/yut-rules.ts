@@ -26,26 +26,26 @@ export interface BoardPosition {
 }
 
 export const BOARD_POSITIONS: BoardPosition[] = [
-  { id: 0, x: 76, y: 90, label: "1" },
-  { id: 1, x: 60, y: 90, label: "2" },
-  { id: 2, x: 44, y: 90, label: "3" },
-  { id: 3, x: 28, y: 90, label: "4" },
-  { id: 4, x: 12, y: 90, label: "참", role: "corner" },
-  { id: 5, x: 12, y: 74, label: "6" },
-  { id: 6, x: 12, y: 58, label: "7" },
-  { id: 7, x: 12, y: 42, label: "8" },
-  { id: 8, x: 12, y: 26, label: "9" },
-  { id: 9, x: 12, y: 10, label: "날", role: "corner" },
-  { id: 10, x: 28, y: 10, label: "11" },
-  { id: 11, x: 44, y: 10, label: "12" },
-  { id: 12, x: 60, y: 10, label: "13" },
-  { id: 13, x: 76, y: 10, label: "14" },
-  { id: 14, x: 92, y: 10, label: "밭", role: "corner" },
-  { id: 15, x: 92, y: 26, label: "16" },
-  { id: 16, x: 92, y: 42, label: "17" },
-  { id: 17, x: 92, y: 58, label: "18" },
-  { id: 18, x: 92, y: 74, label: "19" },
-  { id: 19, x: 92, y: 90, label: "도착", role: "corner" },
+  { id: 0, x: 92, y: 74, label: "1" },
+  { id: 1, x: 92, y: 58, label: "2" },
+  { id: 2, x: 92, y: 42, label: "3" },
+  { id: 3, x: 92, y: 26, label: "4" },
+  { id: 4, x: 92, y: 10, label: "지름", role: "corner" },
+  { id: 5, x: 76, y: 10, label: "6" },
+  { id: 6, x: 60, y: 10, label: "7" },
+  { id: 7, x: 44, y: 10, label: "8" },
+  { id: 8, x: 28, y: 10, label: "9" },
+  { id: 9, x: 12, y: 10, label: "지름", role: "corner" },
+  { id: 10, x: 12, y: 26, label: "11" },
+  { id: 11, x: 12, y: 42, label: "12" },
+  { id: 12, x: 12, y: 58, label: "13" },
+  { id: 13, x: 12, y: 74, label: "14" },
+  { id: 14, x: 12, y: 90, label: "15", role: "corner" },
+  { id: 15, x: 28, y: 90, label: "16" },
+  { id: 16, x: 44, y: 90, label: "17" },
+  { id: 17, x: 60, y: 90, label: "18" },
+  { id: 18, x: 76, y: 90, label: "19" },
+  { id: 19, x: 92, y: 90, label: "출발/도착", role: "corner" },
   { id: 20, x: 28, y: 74, label: "지름" },
   { id: 21, x: 42, y: 58, label: "지름" },
   { id: 22, x: 52, y: 50, label: "중앙", role: "center" },
@@ -58,7 +58,7 @@ export const BOARD_POSITIONS: BoardPosition[] = [
 ];
 
 export const MAIN_ROUTE = Array.from({ length: 20 }, (_, index) => index);
-export const SHORTCUT_A = [4, 20, 21, 22, 23, 24, 14, 15, 16, 17, 18, 19];
+export const SHORTCUT_A = [4, 24, 23, 22, 21, 20, 14, 15, 16, 17, 18, 19];
 export const SHORTCUT_B = [9, 25, 26, 22, 27, 28, 19];
 
 export const BOARD_CONNECTIONS = [
