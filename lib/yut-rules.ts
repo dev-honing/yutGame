@@ -308,7 +308,10 @@ export function getLegalMovesForThrow(
   return moves;
 }
 
-export function getAllLegalMoves(state: GameState, side = state.turn) {
+export function getAllLegalMoves(
+  state: Pick<GameState, "pieces" | "pendingThrows" | "turn">,
+  side = state.turn,
+) {
   return state.pendingThrows.flatMap((pendingThrow) =>
     getLegalMovesForThrow(state, side, pendingThrow),
   );

@@ -16,7 +16,7 @@ import {
   BOARD_CONNECTIONS,
   BOARD_POSITIONS,
   formatThrowSteps,
-  getLegalMovesForThrow,
+  getAllLegalMoves,
   locationText,
   sideLabel,
 } from "@/lib/yut-rules";
@@ -43,7 +43,6 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const [state, setState] = useState<GameState | null>(null);
   const [side, setSide] = useState<PlayerSide | null>(null);
   const [selectedPieceId, setSelectedPieceId] = useState<number | null>(null);
-  const [selectedThrowId, setSelectedThrowId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [lanOrigin, setLanOrigin] = useState("");
@@ -128,25 +127,14 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const pendingKey = state?.pendingThrows.map((record) => record.id).join("|") || "";
   useEffect(() => {
     if (!state?.pendingThrows.length) {
-      setSelectedThrowId(null);
-      setSelectedPieceId(null);
-      return;
-    }
-    if (!selectedThrowId || !state.pendingThrows.some((record) => record.id === selectedThrowId)) {
-      setSelectedThrowId(state.pendingThrows[0].id);
       setSelectedPieceId(null);
     }
-  }, [pendingKey, selectedThrowId, state]);
-
-  const selectedThrow = useMemo(() => {
-    if (!state) return null;
-    return state.pendingThrows.find((record) => record.id === selectedThrowId) || state.pendingThrows[0] || null;
-  }, [state, selectedThrowId]);
+  }, [pendingKey, state]);
 
   const legalMoves = useMemo(() => {
-    if (!state || !selectedThrow) return [];
-    return getLegalMovesForThrow(state, state.turn, selectedThrow);
-  }, [state, selectedThrow]);
+    if (!state) return [];
+    return getAllLegalMoves(state, state.turn);
+  }, [state]);
 
   const selectedOptions = useMemo(
     () => legalMoves.filter((move) => move.pieceId === selectedPieceId),
@@ -156,7 +144,8 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const isMyTurn = Boolean(state && side && state.turn === side && state.status === "playing");
   const canMove = Boolean(isMyTurn && state?.phase === "move");
   const canThrow = Boolean(isMyTurn && state?.phase === "throw");
-  const canPass = Boolean(canMove && selectedThrow && legalMoves.length === 0);
+  const passThrow = state?.pendingThrows[0] || null;
+  const canPass = Boolean(canMove && passThrow && legalMoves.length === 0);
   const hasBonusThrow = Boolean(canThrow && state?.lastThrow?.extraTurn);
 
   const requestAction = useCallback(
@@ -230,6 +219,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   }
 
   const offBoardOptions = selectedOptions.filter((option) => option.to.place !== "board");
+  const pendingThrowById = new Map(state.pendingThrows.map((record) => [record.id, record]));
   const turnLabel = state.status === "playing" ? `${sideLabel(state.turn)} 차례` : "판 종료";
 
   return (
@@ -297,8 +287,15 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                 const redPieces = state.pieces.red.filter(
                   (piece) => piece.place === "board" && piece.position === position.id,
                 );
-                const legalOption = selectedOptions.find(
+                const legalOptions = selectedOptions.filter(
                   (option) => option.to.place === "board" && option.to.position === position.id,
+                );
+                const moveLabels = Array.from(
+                  new Set(
+                    legalOptions
+                      .map((option) => pendingThrowById.get(option.throwId)?.label)
+                      .filter((label): label is string => Boolean(label)),
+                  ),
                 );
                 const selectedHere = side
                   ? state.pieces[side].some(
@@ -314,7 +311,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                     className={[
                       "board-point",
                       position.role || "",
-                      legalOption ? "legal" : "",
+                      legalOptions.length ? "legal" : "",
                       selectedHere ? "selected" : "",
                     ].join(" ")}
                     style={{ left: `${position.x}%`, top: `${position.y}%` }}
@@ -322,6 +319,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                     title={position.label}
                   >
                     {pointLabel && <span className="point-label">{pointLabel}</span>}
+                    {moveLabels.length > 0 && (
+                      <span className="move-choice-label">{moveLabels.join(" / ")}</span>
+                    )}
                     {bluePieces.length > 0 && <PieceStack side="blue" pieces={bluePieces} />}
                     {redPieces.length > 0 && <PieceStack side="red" pieces={redPieces} />}
                   </button>
@@ -388,13 +388,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
 
           <div className="throw-list">
             {state.pendingThrows.map((record) => (
-              <button
+              <div
                 key={record.id}
-                className={`throw-chip ${throwTone(record)} ${selectedThrow?.id === record.id ? "selected" : ""}`}
-                onClick={() => {
-                  setSelectedThrowId(record.id);
-                  setSelectedPieceId(null);
-                }}
+                className={`throw-chip ${throwTone(record)}`}
               >
                 <ThrowSticks record={record} />
                 <span>
@@ -403,7 +399,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                     {formatThrowSteps(record.steps)}{record.extraTurn ? " · 한 번 더" : ""}
                   </small>
                 </span>
-              </button>
+              </div>
             ))}
             {!state.pendingThrows.length && (
               <div className="empty-throws">
@@ -418,7 +414,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
               selectedPieceId === null ? (
                 <b>움직일 말을 선택하세요.</b>
               ) : selectedOptions.length ? (
-                <b>강조된 칸을 눌러 이동하세요.</b>
+                <b>결과가 표시된 칸을 눌러 이동하세요.</b>
               ) : (
                 <b>이 윷으로 움직일 수 없습니다.</b>
               )
@@ -427,15 +423,22 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
             )}
             {offBoardOptions.length > 0 && (
               <div className="offboard-actions">
-                {offBoardOptions.map((option) => (
-                  <button key={`${option.pieceId}-${option.to.place}`} onClick={() => sendMove(option)}>
-                    {option.to.place === "finished" ? "말 내기" : "대기로 물리기"}
-                  </button>
-                ))}
+                {offBoardOptions.map((option) => {
+                  const throwLabel = pendingThrowById.get(option.throwId)?.label;
+                  return (
+                    <button
+                      key={`${option.pieceId}-${option.throwId}-${option.routeChoice || "main"}-${option.to.place}`}
+                      onClick={() => sendMove(option)}
+                    >
+                      {throwLabel ? `${throwLabel} · ` : ""}
+                      {option.to.place === "finished" ? "말 내기" : "대기로 물리기"}
+                    </button>
+                  );
+                })}
               </div>
             )}
-            {canPass && selectedThrow && (
-              <button className="pass-button" onClick={() => void requestAction("pass", { throwId: selectedThrow.id })}>
+            {canPass && passThrow && (
+              <button className="pass-button" onClick={() => void requestAction("pass", { throwId: passThrow.id })}>
                 움직일 말 없음
               </button>
             )}

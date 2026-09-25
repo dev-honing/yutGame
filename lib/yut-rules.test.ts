@@ -4,6 +4,7 @@ import {
   BOARD_POSITIONS,
   SHORTCUT_A,
   createInitialPieces,
+  getAllLegalMoves,
   getLegalMovesForThrow,
 } from "@/lib/yut-rules";
 
@@ -40,6 +41,30 @@ describe("yut board routes", () => {
 
     expect(move?.to).toEqual({ place: "board", position: 1 });
     expect(BOARD_POSITIONS[1]).toMatchObject({ x: 92, y: 58, label: "2" });
+  });
+
+  it("returns mo and do destinations together when both results are pending", () => {
+    const doResult = throwRecord(1);
+    const moResult: ThrowRecord = {
+      ...throwRecord(1),
+      id: "throw-5",
+      name: "mo",
+      label: "모",
+      steps: 5,
+      extraTurn: true,
+    };
+    const state = {
+      pieces: createInitialPieces(),
+      pendingThrows: [moResult, doResult],
+      turn: "blue" as const,
+    };
+
+    const moves = getAllLegalMoves(state).filter((move) => move.pieceId === 0);
+
+    expect(moves.map((move) => [move.throwId, move.to.position])).toEqual([
+      ["throw-5", 4],
+      ["throw-1", 0],
+    ]);
   });
 
   it("continues counterclockwise around the outer route", () => {
