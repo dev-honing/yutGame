@@ -25,6 +25,9 @@ export interface BoardPosition {
   role?: "corner" | "center";
 }
 
+const diagonalCoordinate = (start: number, end: number, step: number) =>
+  start + ((end - start) * step) / 6;
+
 export const BOARD_POSITIONS: BoardPosition[] = [
   { id: 0, x: 92, y: 74, label: "1" },
   { id: 1, x: 92, y: 58, label: "2" },
@@ -46,15 +49,61 @@ export const BOARD_POSITIONS: BoardPosition[] = [
   { id: 17, x: 60, y: 90, label: "18" },
   { id: 18, x: 76, y: 90, label: "19" },
   { id: 19, x: 92, y: 90, label: "출발/도착", role: "corner" },
-  { id: 20, x: 28, y: 74, label: "지름" },
-  { id: 21, x: 42, y: 58, label: "지름" },
-  { id: 22, x: 52, y: 50, label: "중앙", role: "center" },
-  { id: 23, x: 62, y: 38, label: "지름" },
-  { id: 24, x: 78, y: 22, label: "지름" },
-  { id: 25, x: 28, y: 26, label: "지름" },
-  { id: 26, x: 42, y: 40, label: "지름" },
-  { id: 27, x: 64, y: 62, label: "지름" },
-  { id: 28, x: 78, y: 76, label: "지름" },
+  {
+    id: 20,
+    x: diagonalCoordinate(92, 12, 5),
+    y: diagonalCoordinate(10, 90, 5),
+    label: "지름",
+  },
+  {
+    id: 21,
+    x: diagonalCoordinate(92, 12, 4),
+    y: diagonalCoordinate(10, 90, 4),
+    label: "지름",
+  },
+  {
+    id: 22,
+    x: diagonalCoordinate(92, 12, 3),
+    y: diagonalCoordinate(10, 90, 3),
+    label: "중앙",
+    role: "center",
+  },
+  {
+    id: 23,
+    x: diagonalCoordinate(92, 12, 2),
+    y: diagonalCoordinate(10, 90, 2),
+    label: "지름",
+  },
+  {
+    id: 24,
+    x: diagonalCoordinate(92, 12, 1),
+    y: diagonalCoordinate(10, 90, 1),
+    label: "지름",
+  },
+  {
+    id: 25,
+    x: diagonalCoordinate(12, 92, 1),
+    y: diagonalCoordinate(10, 90, 1),
+    label: "지름",
+  },
+  {
+    id: 26,
+    x: diagonalCoordinate(12, 92, 2),
+    y: diagonalCoordinate(10, 90, 2),
+    label: "지름",
+  },
+  {
+    id: 27,
+    x: diagonalCoordinate(12, 92, 4),
+    y: diagonalCoordinate(10, 90, 4),
+    label: "지름",
+  },
+  {
+    id: 28,
+    x: diagonalCoordinate(12, 92, 5),
+    y: diagonalCoordinate(10, 90, 5),
+    label: "지름",
+  },
 ];
 
 export const MAIN_ROUTE = Array.from({ length: 20 }, (_, index) => index);

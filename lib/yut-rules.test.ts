@@ -68,6 +68,33 @@ describe("yut board routes", () => {
     expect(moves.find((move) => move.routeChoice === "main")?.to.position).toBe(5);
   });
 
+  it("keeps both diagonal routes straight and evenly spaced", () => {
+    const positions = new Map(BOARD_POSITIONS.map((position) => [position.id, position]));
+    const diagonals = [
+      [4, 24, 23, 22, 21, 20, 14],
+      [9, 25, 26, 22, 27, 28, 19],
+    ];
+
+    for (const diagonal of diagonals) {
+      const points = diagonal.map((id) => positions.get(id)!);
+      const segmentLengths = points.slice(1).map((point, index) =>
+        Math.hypot(point.x - points[index].x, point.y - points[index].y),
+      );
+      const [first, ...rest] = segmentLengths;
+
+      for (const length of rest) expect(length).toBeCloseTo(first, 10);
+    }
+
+    for (const id of diagonals[0]) {
+      const point = positions.get(id)!;
+      expect(point.x + point.y).toBeCloseTo(102, 10);
+    }
+    for (const id of diagonals[1]) {
+      const point = positions.get(id)!;
+      expect(point.x - point.y).toBeCloseTo(2, 10);
+    }
+  });
+
   it("moves backdo to the previous outer position", () => {
     const state = stateWithBluePiece({
       id: 0,
