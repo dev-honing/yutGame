@@ -820,6 +820,129 @@ a {
   gap: 8px;
 }
 
+.bonus-effect {
+  --bonus-color: var(--blue);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  animation: bonus-screen 2.3s ease-out both;
+}
+
+.bonus-effect.red {
+  --bonus-color: var(--red);
+}
+
+.bonus-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 0 solid var(--bonus-color);
+  background: rgba(255, 248, 221, 0);
+  animation: bonus-flash 2.3s ease-out both;
+}
+
+.bonus-message {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  color: var(--ink);
+  text-align: center;
+  text-shadow: 0 3px 0 #fffdf7, 0 12px 28px rgba(31, 37, 35, 0.22);
+  animation: bonus-message-pop 2.3s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.bonus-message small {
+  color: var(--green);
+  font: 800 12px "DM Mono", monospace;
+}
+
+.bonus-message strong {
+  color: var(--bonus-color);
+  font-size: 92px;
+  line-height: 0.95;
+}
+
+.bonus-message b {
+  font-size: 28px;
+}
+
+.bonus-particles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 1px;
+  height: 1px;
+}
+
+.bonus-particles i {
+  --particle-x: 0px;
+  --particle-y: 0px;
+  --particle-turn: 0deg;
+  position: absolute;
+  width: 9px;
+  height: 28px;
+  background: var(--gold);
+  opacity: 0;
+  animation: bonus-particle 1.15s 0.1s ease-out both;
+}
+
+.bonus-particles i:nth-child(2n) {
+  background: var(--green);
+}
+
+.bonus-particles i:nth-child(3n) {
+  background: var(--bonus-color);
+}
+
+.bonus-particles i:nth-child(1) { --particle-x: -180px; --particle-y: -115px; --particle-turn: -150deg; }
+.bonus-particles i:nth-child(2) { --particle-x: -105px; --particle-y: -155px; --particle-turn: 120deg; }
+.bonus-particles i:nth-child(3) { --particle-x: -24px; --particle-y: -185px; --particle-turn: -80deg; }
+.bonus-particles i:nth-child(4) { --particle-x: 82px; --particle-y: -165px; --particle-turn: 145deg; }
+.bonus-particles i:nth-child(5) { --particle-x: 175px; --particle-y: -105px; --particle-turn: 210deg; }
+.bonus-particles i:nth-child(6) { --particle-x: 190px; --particle-y: 45px; --particle-turn: -125deg; }
+.bonus-particles i:nth-child(7) { --particle-x: 110px; --particle-y: 145px; --particle-turn: 170deg; }
+.bonus-particles i:nth-child(8) { --particle-x: 5px; --particle-y: 175px; --particle-turn: -190deg; }
+.bonus-particles i:nth-child(9) { --particle-x: -112px; --particle-y: 140px; --particle-turn: 135deg; }
+.bonus-particles i:nth-child(10) { --particle-x: -190px; --particle-y: 38px; --particle-turn: -220deg; }
+
+@keyframes bonus-screen {
+  0%, 100% { opacity: 0; }
+  8%, 78% { opacity: 1; }
+}
+
+@keyframes bonus-flash {
+  0% { border-width: 0; background: rgba(255, 248, 221, 0); }
+  12% { border-width: 9px; background: rgba(255, 248, 221, 0.32); }
+  55% { border-width: 3px; background: rgba(255, 248, 221, 0.08); }
+  100% { border-width: 0; background: rgba(255, 248, 221, 0); }
+}
+
+@keyframes bonus-message-pop {
+  0% { opacity: 0; transform: scale(0.7) translateY(18px); }
+  18% { opacity: 1; transform: scale(1.08) translateY(0); }
+  28%, 76% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.96) translateY(-12px); }
+}
+
+@keyframes bonus-particle {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(0); }
+  16% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(
+      calc(-50% + var(--particle-x)),
+      calc(-50% + var(--particle-y))
+    ) scale(1) rotate(var(--particle-turn));
+  }
+}
+
 .control-panel {
   height: min(720px, calc(100dvh - 114px));
   min-height: 560px;
@@ -1177,6 +1300,14 @@ a {
     font-size: 30px;
   }
 
+  .bonus-message strong {
+    font-size: 64px;
+  }
+
+  .bonus-message b {
+    font-size: 24px;
+  }
+
   .join-row {
     grid-template-columns: 1fr;
   }
@@ -1266,5 +1397,17 @@ a {
 
   .history-row {
     grid-template-columns: 28px 60px 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bonus-effect,
+  .bonus-message {
+    animation: none;
+  }
+
+  .bonus-effect::before,
+  .bonus-particles {
+    display: none;
   }
 }

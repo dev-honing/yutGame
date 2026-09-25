@@ -156,6 +156,10 @@ function createThrow(now = Date.now()): ThrowRecord {
   };
 }
 
+function throwWithParticle(record: ThrowRecord) {
+  return `${record.label}${record.name === "geol" || record.name === "yut" ? "을" : "를"}`;
+}
+
 function allFinished(state: GameState, side: PlayerSide) {
   return state.pieces[side].every((piece) => piece.place === "finished");
 }
@@ -400,7 +404,9 @@ export function performAction(stored: GameState, rawIdentity: UserIdentity, acti
     const pendingThrow = createThrow();
     state.pendingThrows.push(pendingThrow);
     state.lastThrow = pendingThrow;
-    state.notice = `${sideLabel(side)}이(가) ${pendingThrow.label}을(를) 냈습니다.`;
+    state.notice = pendingThrow.extraTurn
+      ? `${sideLabel(side)}이 ${throwWithParticle(pendingThrow)} 냈습니다. 한 번 더 던집니다.`
+      : `${sideLabel(side)}이 ${throwWithParticle(pendingThrow)} 냈습니다.`;
     state.phase = pendingThrow.extraTurn ? "throw" : "move";
     autoPassIfNoMoves(state);
   } else if (action.type === "move") {

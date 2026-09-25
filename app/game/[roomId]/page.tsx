@@ -39,6 +39,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const { roomId } = use(params);
   const identityRef = useRef<UserIdentity | null>(null);
   const historyRef = useRef<HTMLDivElement | null>(null);
+  const seenThrowIdRef = useRef<string | null>(null);
   const [state, setState] = useState<GameState | null>(null);
   const [side, setSide] = useState<PlayerSide | null>(null);
   const [selectedPieceId, setSelectedPieceId] = useState<number | null>(null);
@@ -46,6 +47,10 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const [notice, setNotice] = useState("");
   const [copied, setCopied] = useState(false);
   const [lanOrigin, setLanOrigin] = useState("");
+  const [bonusEffect, setBonusEffect] = useState<{
+    record: ThrowRecord;
+    side: PlayerSide;
+  } | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -100,6 +105,26 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
     if (list) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [state?.moves.length]);
 
+  useEffect(() => {
+    const record = state?.lastThrow;
+    if (!record) {
+      seenThrowIdRef.current = null;
+      return;
+    }
+    if (seenThrowIdRef.current === record.id) return;
+
+    seenThrowIdRef.current = record.id;
+    if (record.extraTurn && state) {
+      setBonusEffect({ record, side: state.turn });
+    }
+  }, [state?.lastThrow, state]);
+
+  useEffect(() => {
+    if (!bonusEffect) return;
+    const timer = setTimeout(() => setBonusEffect(null), 2300);
+    return () => clearTimeout(timer);
+  }, [bonusEffect]);
+
   const pendingKey = state?.pendingThrows.map((record) => record.id).join("|") || "";
   useEffect(() => {
     if (!state?.pendingThrows.length) {
@@ -132,6 +157,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
   const canMove = Boolean(isMyTurn && state?.phase === "move");
   const canThrow = Boolean(isMyTurn && state?.phase === "throw");
   const canPass = Boolean(canMove && selectedThrow && legalMoves.length === 0);
+  const hasBonusThrow = Boolean(canThrow && state?.lastThrow?.extraTurn);
 
   const requestAction = useCallback(
     async (action: ActionName, payload: Record<string, unknown> = {}) => {
@@ -223,6 +249,14 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
           {copied ? "복사 완료" : "초대 링크"}
         </button>
       </nav>
+
+      {bonusEffect && (
+        <BonusThrowEffect
+          key={bonusEffect.record.id}
+          record={bonusEffect.record}
+          side={bonusEffect.side}
+        />
+      )}
 
       <div className="game-layout">
         <section className="board-column">
@@ -348,8 +382,8 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
           </div>
 
           <button className="throw-button" onClick={() => void requestAction("throw")} disabled={!canThrow}>
-            <span>윷 던지기</span>
-            <b>{canThrow ? "READY" : state.phase === "move" ? "MOVE" : "WAIT"}</b>
+            <span>{hasBonusThrow ? "한 번 더 던지기" : "윷 던지기"}</span>
+            <b>{hasBonusThrow ? "BONUS" : canThrow ? "READY" : state.phase === "move" ? "MOVE" : "WAIT"}</b>
           </button>
 
           <div className="throw-list">
@@ -365,7 +399,9 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                 <ThrowSticks record={record} />
                 <span>
                   <b>{record.label}</b>
-                  <small>{formatThrowSteps(record.steps)}</small>
+                  <small>
+                    {formatThrowSteps(record.steps)}{record.extraTurn ? " · 한 번 더" : ""}
+                  </small>
                 </span>
               </button>
             ))}
@@ -444,6 +480,21 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
         </aside>
       </div>
     </main>
+  );
+}
+
+function BonusThrowEffect({ record, side }: { record: ThrowRecord; side: PlayerSide }) {
+  return (
+    <div className={`bonus-effect ${side}`} role="status" aria-live="assertive">
+      <span className="bonus-particles" aria-hidden="true">
+        {Array.from({ length: 10 }, (_, index) => <i key={index} />)}
+      </span>
+      <span className="bonus-message">
+        <small>{sideLabel(side)} 결과</small>
+        <strong>{record.label}!</strong>
+        <b>한 번 더</b>
+      </span>
+    </div>
   );
 }
 

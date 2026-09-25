@@ -53,15 +53,19 @@ describe("yutnori game service", () => {
     expect(state.moves[0].throwLabel).toBe("도");
   });
 
-  it("keeps the turn in throw phase on yut or mo", () => {
+  it.each([
+    { randomValue: 0.9, label: "윷" },
+    { randomValue: 0.99, label: "모" },
+  ])("keeps the turn and announces another throw on $label", ({ randomValue, label }) => {
     const game = readyGame();
-    forceThrow(0.9);
+    forceThrow(randomValue);
     const state = performAction(game.state, game.blue, { type: "throw" });
 
     expect(state.phase).toBe("throw");
     expect(state.pendingThrows).toHaveLength(1);
-    expect(state.pendingThrows[0].label).toBe("윷");
+    expect(state.pendingThrows[0].label).toBe(label);
     expect(state.turn).toBe("blue");
+    expect(state.notice).toContain("한 번 더");
   });
 
   it("captures opponent pieces and grants another throw", () => {
