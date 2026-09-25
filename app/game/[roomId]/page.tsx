@@ -320,12 +320,12 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
             />
             <div className="yut-board" aria-label="윷판">
               <svg className="board-lines" viewBox="0 0 100 100" aria-hidden="true">
-                {BOARD_CONNECTIONS.map(([from, to]) => {
+                {BOARD_CONNECTIONS.map(([from, to], connectionIndex) => {
                   const start = BOARD_POSITIONS.find((position) => position.id === from)!;
                   const end = BOARD_POSITIONS.find((position) => position.id === to)!;
                   return (
                     <line
-                      key={`${from}-${to}`}
+                      key={`${from}-${to}-${connectionIndex}`}
                       x1={start.x}
                       y1={start.y}
                       x2={end.x}
