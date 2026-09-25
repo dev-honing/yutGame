@@ -143,12 +143,16 @@ export default function HomePage() {
 
         <div className="preview-board" aria-hidden="true">
           <div className="preview-grid">
-            {Array.from({ length: 25 }, (_, index) => (
-              <span key={index} className={index % 6 === 0 ? "big" : ""} />
-            ))}
+            {Array.from({ length: 25 }, (_, index) => {
+              const token = index === 12 ? { side: "blue", count: 2 } : index === 24 ? { side: "red", count: 1 } : null;
+
+              return (
+                <span key={index} className={`preview-point ${index % 6 === 0 ? "big" : ""}`}>
+                  {token && <i className={`preview-token ${token.side}`}>{token.count}</i>}
+                </span>
+              );
+            })}
           </div>
-          <div className="preview-token blue">2</div>
-          <div className="preview-token red">1</div>
           <div className="preview-throw">
             <span />
             <span />
