@@ -608,7 +608,12 @@ function ThrowMotionEffect({ motion }: { motion: ThrowMotion }) {
       role="status"
       aria-live="assertive"
     >
-      <ThrowThreeScene motionId={motion.key} zone={motion.zone} record={record} />
+      <ThrowThreeScene
+        key={record?.id || motion.key}
+        motionId={`${motion.key}:${record?.id || "pending"}`}
+        zone={motion.zone}
+        record={record}
+      />
       <div className="throw-motion-stage">
         <span className="throw-motion-zone">
           {sideLabel(motion.side)} · {motion.zone === "outside" ? "판 밖 승부" : "판 안 투척"}
