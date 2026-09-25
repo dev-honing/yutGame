@@ -334,11 +334,12 @@ export function ThrowThreeScene({ motionId, zone, record }: ThrowThreeSceneProps
     function renderFrame(now: number) {
       if (disposed) return;
       const rawProgress = reducedMotion ? 1 : Math.min((now - startedAt) / FLIGHT_DURATION_MS, 1);
-      const outside = motionRef.current.zone === "outside";
-      const landings = outside ? OUTSIDE_LANDINGS : INSIDE_LANDINGS;
+      const riskyThrow = motionRef.current.zone === "outside";
+      const landedOutside = motionRef.current.record?.name === "nak";
+      const landings = landedOutside ? OUTSIDE_LANDINGS : INSIDE_LANDINGS;
       const fallbackFaces: StickFace[] = ["front", "back", "front", "back"];
       const faces = motionRef.current.record?.sticks || fallbackFaces;
-      const surfaceZ = outside ? -0.34 : 0.17;
+      const surfaceZ = landedOutside ? -0.34 : 0.17;
 
       sticks.forEach((stick, index) => {
         const sourceLanding = landings[index];
@@ -352,7 +353,7 @@ export function ThrowThreeScene({ motionId, zone, record }: ThrowThreeSceneProps
         const spinY = TAU * (0.94 + index * 0.16);
         const spinZ = (index - 1.5) * 0.12 + TAU * (0.54 + index * 0.11);
 
-        stick.contactShadow.position.set(landing.x, landing.y, outside ? -0.565 : -0.073);
+        stick.contactShadow.position.set(landing.x, landing.y, landedOutside ? -0.565 : -0.073);
         stick.contactShadow.rotation.z = landing.angle;
 
         if (rawProgress < 0.18) {
@@ -364,7 +365,7 @@ export function ThrowThreeScene({ motionId, zone, record }: ThrowThreeSceneProps
         } else if (rawProgress < impactAt) {
           const flight = (rawProgress - 0.18) / (impactAt - 0.18);
           const travel = easeInOut(flight);
-          const controlX = (index - 1.5) * 0.78 + (outside ? Math.sign(landing.x) * 1.15 : 0);
+          const controlX = (index - 1.5) * 0.78 + (riskyThrow ? Math.sign(landing.x) * 1.15 : 0);
           stick.group.position.set(
             quadraticBezier(startX, controlX, landing.x + skidX, travel),
             THREE.MathUtils.lerp(startY + 0.62, landing.y + skidY, travel),
