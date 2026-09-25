@@ -256,6 +256,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                 })}
               </svg>
               {BOARD_POSITIONS.map((position) => {
+                const pointLabel = position.label === "지름" ? "" : position.label;
                 const bluePieces = state.pieces.blue.filter(
                   (piece) => piece.place === "board" && piece.position === position.id,
                 );
@@ -286,7 +287,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                     onClick={() => handleBoardPoint(position.id)}
                     title={position.label}
                   >
-                    <span className="point-label">{position.label}</span>
+                    {pointLabel && <span className="point-label">{pointLabel}</span>}
                     {bluePieces.length > 0 && <PieceStack side="blue" pieces={bluePieces} />}
                     {redPieces.length > 0 && <PieceStack side="red" pieces={redPieces} />}
                   </button>
