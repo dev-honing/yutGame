@@ -256,7 +256,7 @@ export default function GamePage({ params }: { params: Promise<{ roomId: string 
                 })}
               </svg>
               {BOARD_POSITIONS.map((position) => {
-                const pointLabel = position.label === "지름" ? "" : position.label;
+                const pointLabel = position.id === 19 ? position.label : "";
                 const bluePieces = state.pieces.blue.filter(
                   (piece) => piece.place === "board" && piece.position === position.id,
                 );
