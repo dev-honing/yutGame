@@ -9,7 +9,6 @@ const lanAddresses = Object.values(networkInterfaces())
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: lanAddresses,
-  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
 };
 
 export default nextConfig;
