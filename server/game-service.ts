@@ -10,8 +10,10 @@ import type {
   StickFace,
   ThrowName,
   ThrowRecord,
+  ThrowZone,
   UserIdentity,
 } from "@/lib/types";
+import { pickThrowName } from "@/lib/throw-rules";
 import {
   createInitialPieces,
   formatThrowSteps,
@@ -26,7 +28,7 @@ import {
 const EMPTY_SCORE = { blue: 0, red: 0 };
 
 export type GameAction =
-  | { type: "throw" }
+  | { type: "throw"; zone: ThrowZone }
   | { type: "move"; move: MoveRequest }
   | { type: "pass"; throwId: string }
   | { type: "resign" }
@@ -90,8 +92,20 @@ function publicPlayer(identity: UserIdentity): PublicPlayer {
   return { ...identity, connected: true };
 }
 
-function throwSpec(name: ThrowName): Omit<ThrowRecord, "id" | "createdAt"> {
-  const specs: Record<ThrowName, Omit<ThrowRecord, "id" | "createdAt">> = {
+function throwSpec(
+  name: ThrowName,
+): Omit<ThrowRecord, "id" | "side" | "zone" | "createdAt"> {
+  const specs: Record<
+    ThrowName,
+    Omit<ThrowRecord, "id" | "side" | "zone" | "createdAt">
+  > = {
+    nak: {
+      name: "nak",
+      label: "낙",
+      steps: 0,
+      extraTurn: false,
+      sticks: ["front", "back", "front", "back"],
+    },
     backdo: {
       name: "backdo",
       label: "빽도",
@@ -138,21 +152,13 @@ function throwSpec(name: ThrowName): Omit<ThrowRecord, "id" | "createdAt"> {
   return specs[name];
 }
 
-function randomThrowName(): ThrowName {
-  const roll = Math.floor(Math.random() * 16);
-  if (roll === 0) return "backdo";
-  if (roll <= 3) return "do";
-  if (roll <= 9) return "gae";
-  if (roll <= 13) return "geol";
-  if (roll === 14) return "yut";
-  return "mo";
-}
-
-function createThrow(now = Date.now()): ThrowRecord {
+function createThrow(side: PlayerSide, zone: ThrowZone, now = Date.now()): ThrowRecord {
   return {
     id: makeId(4),
+    side,
+    zone,
     createdAt: now,
-    ...throwSpec(randomThrowName()),
+    ...throwSpec(pickThrowName(zone)),
   };
 }
 
@@ -401,12 +407,26 @@ export function performAction(stored: GameState, rawIdentity: UserIdentity, acti
     if (state.phase !== "throw") {
       throw new GameError("MOVE_REQUIRED", "먼저 남은 윷 결과로 말을 움직여야 합니다.");
     }
-    const pendingThrow = createThrow();
-    state.pendingThrows.push(pendingThrow);
+    const pendingThrow = createThrow(side, action.zone);
     state.lastThrow = pendingThrow;
+    const zoneLabel = pendingThrow.zone === "outside" ? "판 밖" : "판 안";
+
+    if (pendingThrow.name === "nak") {
+      if (state.pendingThrows.length > 0) {
+        state.phase = "move";
+        state.notice = `${sideLabel(side)}의 ${zoneLabel} 던지기가 낙입니다. 남은 윷 결과로 이동합니다.`;
+        autoPassIfNoMoves(state);
+      } else {
+        endTurn(state, `${sideLabel(side)}의 ${zoneLabel} 던지기가 낙입니다. 차례가 넘어갑니다.`);
+      }
+      state.serverNow = Date.now();
+      return state;
+    }
+
+    state.pendingThrows.push(pendingThrow);
     state.notice = pendingThrow.extraTurn
-      ? `${sideLabel(side)}이 ${throwWithParticle(pendingThrow)} 냈습니다. 한 번 더 던집니다.`
-      : `${sideLabel(side)}이 ${throwWithParticle(pendingThrow)} 냈습니다.`;
+      ? `${sideLabel(side)}이 ${zoneLabel}에서 ${throwWithParticle(pendingThrow)} 냈습니다. 한 번 더 던집니다.`
+      : `${sideLabel(side)}이 ${zoneLabel}에서 ${throwWithParticle(pendingThrow)} 냈습니다.`;
     state.phase = pendingThrow.extraTurn ? "throw" : "move";
     autoPassIfNoMoves(state);
   } else if (action.type === "move") {

@@ -23,7 +23,7 @@ function throwAndMove(
   pieceId = 0,
 ) {
   forceThrow(randomValue);
-  const thrown = performAction(state, player, { type: "throw" });
+  const thrown = performAction(state, player, { type: "throw", zone: "inside" });
   return performAction(thrown, player, {
     type: "move",
     move: { pieceId, throwId: thrown.pendingThrows.at(-1)!.id },
@@ -59,7 +59,7 @@ describe("yutnori game service", () => {
   ])("keeps the turn and announces another throw on $label", ({ randomValue, label }) => {
     const game = readyGame();
     forceThrow(randomValue);
-    const state = performAction(game.state, game.blue, { type: "throw" });
+    const state = performAction(game.state, game.blue, { type: "throw", zone: "inside" });
 
     expect(state.phase).toBe("throw");
     expect(state.pendingThrows).toHaveLength(1);
@@ -83,11 +83,37 @@ describe("yutnori game service", () => {
   it("auto-passes backdo when no piece can move", () => {
     const game = readyGame();
     forceThrow(0.01);
-    const state = performAction(game.state, game.blue, { type: "throw" });
+    const state = performAction(game.state, game.blue, { type: "throw", zone: "inside" });
 
     expect(state.turn).toBe("red");
     expect(state.phase).toBe("throw");
     expect(state.pendingThrows).toHaveLength(0);
+  });
+
+  it("ends the turn when an outside throw lands out", () => {
+    const game = readyGame();
+    forceThrow(0.01);
+    const state = performAction(game.state, game.blue, { type: "throw", zone: "outside" });
+
+    expect(state.lastThrow).toMatchObject({ name: "nak", zone: "outside", side: "blue" });
+    expect(state.pendingThrows).toHaveLength(0);
+    expect(state.turn).toBe("red");
+    expect(state.phase).toBe("throw");
+    expect(state.notice).toContain("낙");
+  });
+
+  it("keeps earned bonus moves when the next outside throw lands out", () => {
+    const game = readyGame();
+    forceThrow(0.86);
+    const yutState = performAction(game.state, game.blue, { type: "throw", zone: "outside" });
+
+    forceThrow(0.01);
+    const nakState = performAction(yutState, game.blue, { type: "throw", zone: "outside" });
+
+    expect(nakState.lastThrow?.name).toBe("nak");
+    expect(nakState.pendingThrows.map((record) => record.name)).toEqual(["yut"]);
+    expect(nakState.turn).toBe("blue");
+    expect(nakState.phase).toBe("move");
   });
 
   it("finishes when all four pieces reach the end", () => {
@@ -114,6 +140,6 @@ describe("yutnori game service", () => {
 
   it("rejects moves out of turn", () => {
     const game = readyGame();
-    expect(() => performAction(game.state, game.red, { type: "throw" })).toThrow(GameError);
+    expect(() => performAction(game.state, game.red, { type: "throw", zone: "inside" })).toThrow(GameError);
   });
 });

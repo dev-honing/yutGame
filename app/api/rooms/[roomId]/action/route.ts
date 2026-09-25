@@ -1,7 +1,7 @@
 import { apiError, noStoreJson, parseIdentity } from "@/server/api-utils";
 import { GameError, performAction, type GameAction } from "@/server/game-service";
 import { getRoom, saveRoom } from "@/server/room-store";
-import type { MoveRequest } from "@/lib/types";
+import type { MoveRequest, ThrowZone } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,6 +11,7 @@ type ActionBody = {
   action?: GameAction["type"];
   move?: MoveRequest;
   throwId?: string;
+  throwZone?: unknown;
 };
 
 export async function POST(
@@ -28,6 +29,8 @@ export async function POST(
     const action: GameAction =
       body.action === "move"
         ? { type: "move", move: requireMove(body.move) }
+        : body.action === "throw"
+          ? { type: "throw", zone: parseThrowZone(body.throwZone) }
         : body.action === "pass"
           ? { type: "pass", throwId: requireThrowId(body.throwId) }
           : { type: body.action };
@@ -38,6 +41,12 @@ export async function POST(
   } catch (error) {
     return apiError(error);
   }
+}
+
+function parseThrowZone(value: unknown): ThrowZone {
+  if (value === undefined || value === "inside") return "inside";
+  if (value === "outside") return "outside";
+  throw new GameError("INVALID_THROW_ZONE", "윷을 던질 위치를 확인할 수 없습니다.");
 }
 
 function requireMove(move: MoveRequest | undefined) {

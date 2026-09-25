@@ -4,7 +4,8 @@ export type GamePhase = "throw" | "move";
 export type PiecePlace = "home" | "board" | "finished";
 export type RouteTrack = "main" | "shortcut-a" | "shortcut-b";
 export type RouteChoice = "main" | "shortcut";
-export type ThrowName = "backdo" | "do" | "gae" | "geol" | "yut" | "mo";
+export type ThrowZone = "inside" | "outside";
+export type ThrowName = "nak" | "backdo" | "do" | "gae" | "geol" | "yut" | "mo";
 export type StickFace = "front" | "back" | "marked-back";
 
 export interface PublicPlayer {
@@ -27,6 +28,8 @@ export interface YutPiece {
 
 export interface ThrowRecord {
   id: string;
+  side: PlayerSide;
+  zone: ThrowZone;
   name: ThrowName;
   label: string;
   steps: number;

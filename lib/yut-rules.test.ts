@@ -18,6 +18,8 @@ function throwRecord(steps: number): ThrowRecord {
 
   return {
     id: `throw-${steps}`,
+    side: "blue",
+    zone: "inside",
     ...outcome,
     steps,
     extraTurn: false,
